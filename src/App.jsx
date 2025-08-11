@@ -1,56 +1,33 @@
+// src/App.jsx
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Layout from './components/Layout.jsx';
-import ProtectedRoute from './components/ProtectedRoute.jsx';
-import Home from './pages/Home.jsx';
-import Users from './pages/Users.jsx';
-import Exercises from './pages/Exercises.jsx';
-import HomeScreenConfig from './pages/HomeScreenConfig.jsx';
-import SignIn from './pages/SignIn.jsx';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import Layout from './components/Layout';
+import Users from './pages/Users';
+import Exercises from './pages/Exercises';
+import HomeScreenConfig from './pages/HomeScreenConfig';
+import SignIn from './pages/SignIn';
 
 function App() {
-  return (
-    <BrowserRouter>
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<Navigate to="home" replace />} />
-          <Route
-            path="home"
-            element={
-              <ProtectedRoute>
-                <Home />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="users"
-            element={
-              <ProtectedRoute>
-                <Users />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="exercises"
-            element={
-              <ProtectedRoute>
-                <Exercises />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="home-config"
-            element={
-              <ProtectedRoute>
-                <HomeScreenConfig />
-              </ProtectedRoute>
-            }
-          />
-        </Route>
+  const isAuthenticated = !!localStorage.getItem('token'); // simplify auth check
 
-        <Route path="/signin" element={<SignIn />} />
-      </Routes>
-    </BrowserRouter>
+  return (
+    <Router>
+      {isAuthenticated ? (
+        <Layout>
+          <Routes>
+            <Route path="/users" element={<Users />} />
+            <Route path="/exercises" element={<Exercises />} />
+            <Route path="/home-config" element={<HomeScreenConfig />} />
+            <Route path="*" element={<Navigate to="/users" />} />
+          </Routes>
+        </Layout>
+      ) : (
+        <Routes>
+          <Route path="/login" element={<SignIn />} />
+          <Route path="*" element={<Navigate to="/login" />} />
+        </Routes>
+      )}
+    </Router>
   );
 }
 

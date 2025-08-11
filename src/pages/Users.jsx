@@ -1,115 +1,195 @@
+// src/pages/Users.jsx
 import React, { useEffect, useState } from 'react';
+import {
+  Box,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  IconButton,
+  Tooltip,
+  Snackbar,
+  Alert,
+  CircularProgress,
+  Typography,
+} from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchUsers, addUser, editUser, deleteUser } from '../redux/userSlice';
-import { Table, Button, Form, Alert, Spinner, Row, Col } from 'react-bootstrap';
+import { fetchUsers, deleteUser, editUser } from '../redux/userSlice';
+import EditUser from '../components/EditUser';
 
 export default function Users() {
   const dispatch = useDispatch();
-  const { list: users, status, error } = useSelector(state => state.users);
+  const { list: users, status, error } = useSelector((state) => state.users);
 
-  const [form, setForm] = useState({ name: '', role: 'user' });
-  const [isEditing, setIsEditing] = useState(false);
-  const [editId, setEditId] = useState(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [userToEdit, setUserToEdit] = useState(null);
+
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
 
   useEffect(() => {
-    if (status === 'idle') dispatch(fetchUsers());
+    if (status === 'idle') {
+      dispatch(fetchUsers());
+    }
   }, [dispatch, status]);
 
-  const handleSubmit = e => {
-    e.preventDefault();
-    if (!form.name.trim()) return;
-
-    if (isEditing) {
-      dispatch(editUser({ id: editId, user: form }));
-    } else {
-      dispatch(addUser(form));
-    }
-    setForm({ name: '', role: 'user' });
-    setIsEditing(false);
+  const handleEditClick = (user) => {
+    setUserToEdit(user);
+    setEditDialogOpen(true);
   };
 
-  const handleEdit = user => {
-    setForm({ name: user.name, role: user.role });
-    setIsEditing(true);
-    setEditId(user._id);
+  const handleEditClose = () => {
+    setEditDialogOpen(false);
+    setUserToEdit(null);
   };
 
-  const handleDelete = id => {
-    if (window.confirm('Are you sure?')) dispatch(deleteUser(id));
+  const handleEditSave = (updatedData) => {
+    dispatch(editUser({ id: userToEdit._id, user: updatedData }))
+      .unwrap()
+      .then(() => {
+        setSnackbar({ open: true, message: 'User updated successfully', severity: 'success' });
+        handleEditClose();
+      })
+      .catch(() => {
+        setSnackbar({ open: true, message: 'Failed to update user', severity: 'error' });
+      });
   };
+
+  const handleDeleteClick = (id) => {
+    setUserToDelete(id);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    dispatch(deleteUser(userToDelete))
+      .unwrap()
+      .then(() => {
+        setSnackbar({ open: true, message: 'User deleted successfully', severity: 'success' });
+      })
+      .catch(() => {
+        setSnackbar({ open: true, message: 'Failed to delete user', severity: 'error' });
+      });
+    setDeleteConfirmOpen(false);
+    setUserToDelete(null);
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirmOpen(false);
+    setUserToDelete(null);
+  };
+
+  const handleSnackbarClose = () => {
+    setSnackbar((prev) => ({ ...prev, open: false }));
+  };
+
+  if (status === 'loading') {
+    return (
+      <Box textAlign="center" mt={5}>
+        <CircularProgress />
+        <Typography variant="h6" mt={2}>Loading users...</Typography>
+      </Box>
+    );
+  }
+
+  if (status === 'failed') {
+    return (
+      <Box textAlign="center" mt={5}>
+        <Alert severity="error">Error loading users: {error}</Alert>
+      </Box>
+    );
+  }
 
   return (
-    <div className="p-3">
-      <h2 className="mb-4">Users Management</h2>
+    <Box p={3}>
+      <Typography variant="h4" mb={3}>Users</Typography>
 
-      {status === 'loading' && <Spinner animation="border" />}
-      {error && <Alert variant="danger">{error}</Alert>}
+      {users.length === 0 ? (
+        <Typography>No users found.</Typography>
+      ) : (
+        <TableContainer component={Paper}>
+          <Table aria-label="Users Table">
+            <TableHead>
+              <TableRow>
+                <TableCell>Email</TableCell>
+                <TableCell>Name</TableCell>
+                <TableCell>Role</TableCell>
+                <TableCell>Admin</TableCell>
+                <TableCell align="right">Actions</TableCell>
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {users.map((user) => (
+                <TableRow key={user._id}>
+                  <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.name || '-'}</TableCell>
+                  <TableCell>{user.role || '-'}</TableCell>
+                  <TableCell>{user.isAdmin ? 'Yes' : 'No'}</TableCell>
+                  <TableCell align="right">
+                    <Tooltip title="Edit">
+                      <IconButton color="primary" onClick={() => handleEditClick(user)}>
+                        <EditIcon />
+                      </IconButton>
+                    </Tooltip>
+                    <Tooltip title="Delete">
+                      <IconButton color="error" onClick={() => handleDeleteClick(user._id)}>
+                        <DeleteIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
 
-      <Form onSubmit={handleSubmit} className="mb-4">
-        <Row className="g-2">
-          <Col xs={12} md={5}>
-            <Form.Control
-              placeholder="User Name"
-              value={form.name}
-              onChange={e => setForm({ ...form, name: e.target.value })}
-              required
-            />
-          </Col>
-          <Col xs={12} md={3}>
-            <Form.Select
-              value={form.role}
-              onChange={e => setForm({ ...form, role: e.target.value })}
-            >
-              <option value="user">User</option>
-              <option value="coach">Coach</option>
-            </Form.Select>
-          </Col>
-          <Col xs={12} md={4}>
-            <Button type="submit" className="w-100">
-              {isEditing ? 'Update User' : 'Add User'}
-            </Button>
-          </Col>
-        </Row>
-      </Form>
+      {/* Edit User Dialog */}
+      <EditUser
+        open={editDialogOpen}
+        onClose={handleEditClose}
+        user={userToEdit}
+        onSave={handleEditSave}
+      />
 
-      <Table striped bordered hover responsive>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Role</th>
-            <th style={{ minWidth: '120px' }}>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.length === 0 ? (
-            <tr>
-              <td colSpan="3" className="text-center">
-                No users found.
-              </td>
-            </tr>
-          ) : (
-            users.map(u => (
-              <tr key={u._id}>
-                <td>{u.name}</td>
-                <td>{u.role}</td>
-                <td>
-                  <Button
-                    variant="warning"
-                    size="sm"
-                    className="me-2"
-                    onClick={() => handleEdit(u)}
-                  >
-                    Edit
-                  </Button>
-                  <Button variant="danger" size="sm" onClick={() => handleDelete(u._id)}>
-                    Delete
-                  </Button>
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </Table>
-    </div>
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteConfirmOpen}
+        onClose={handleDeleteCancel}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">Confirm Delete</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this user? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel}>Cancel</Button>
+          <Button onClick={handleDeleteConfirm} color="error" variant="contained" autoFocus>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={handleSnackbarClose} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
+    </Box>
   );
 }

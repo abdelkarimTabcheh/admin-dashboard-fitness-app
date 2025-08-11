@@ -1,3 +1,4 @@
+//components/Sidebar.jsx
 import React from 'react';
 import { Nav } from 'react-bootstrap';
 import { useLocation } from 'react-router-dom';
