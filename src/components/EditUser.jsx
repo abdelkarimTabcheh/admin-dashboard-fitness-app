@@ -67,6 +67,7 @@ export default function EditUser({ open, onClose, user, onSave }) {
             fullWidth
             required
             disabled
+            InputLabelProps={{ shrink: true }} // <- keeps label visible even if disabled
           />
           <TextField
             label="Name"

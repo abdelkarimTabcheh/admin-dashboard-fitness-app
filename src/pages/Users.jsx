@@ -15,13 +15,16 @@ import {
   Alert,
   CircularProgress,
   Typography,
+  Button,
 } from '@mui/material';
-import { Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions, Button } from '@mui/material';
+import { Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import AddIcon from '@mui/icons-material/Add';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchUsers, deleteUser, editUser } from '../redux/userSlice';
+import { fetchUsers, deleteUser, editUser, addUser } from '../redux/userSlice';
 import EditUser from '../components/EditUser';
+import CreateUser from '../components/CreateUser';
 
 export default function Users() {
   const dispatch = useDispatch();
@@ -33,6 +36,8 @@ export default function Users() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
 
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
 
   useEffect(() => {
@@ -41,16 +46,31 @@ export default function Users() {
     }
   }, [dispatch, status]);
 
+  // --- CREATE ---
+  const handleCreateClick = () => setCreateDialogOpen(true);
+  const handleCreateClose = () => setCreateDialogOpen(false);
+
+  const handleCreateSave = (newUserData) => {
+    dispatch(addUser(newUserData))
+      .unwrap()
+      .then(() => {
+        setSnackbar({ open: true, message: 'User created successfully', severity: 'success' });
+        handleCreateClose();
+      })
+      .catch(() => {
+        setSnackbar({ open: true, message: 'Failed to create user', severity: 'error' });
+      });
+  };
+
+  // --- EDIT ---
   const handleEditClick = (user) => {
     setUserToEdit(user);
     setEditDialogOpen(true);
   };
-
   const handleEditClose = () => {
     setEditDialogOpen(false);
     setUserToEdit(null);
   };
-
   const handleEditSave = (updatedData) => {
     dispatch(editUser({ id: userToEdit._id, user: updatedData }))
       .unwrap()
@@ -63,11 +83,11 @@ export default function Users() {
       });
   };
 
+  // --- DELETE ---
   const handleDeleteClick = (id) => {
     setUserToDelete(id);
     setDeleteConfirmOpen(true);
   };
-
   const handleDeleteConfirm = () => {
     dispatch(deleteUser(userToDelete))
       .unwrap()
@@ -80,15 +100,12 @@ export default function Users() {
     setDeleteConfirmOpen(false);
     setUserToDelete(null);
   };
-
   const handleDeleteCancel = () => {
     setDeleteConfirmOpen(false);
     setUserToDelete(null);
   };
 
-  const handleSnackbarClose = () => {
-    setSnackbar((prev) => ({ ...prev, open: false }));
-  };
+  const handleSnackbarClose = () => setSnackbar((prev) => ({ ...prev, open: false }));
 
   if (status === 'loading') {
     return (
@@ -110,6 +127,17 @@ export default function Users() {
   return (
     <Box p={3}>
       <Typography variant="h4" mb={3}>Users</Typography>
+
+      {/* Create Button */}
+      <Button
+        variant="contained"
+        color="primary"
+        startIcon={<AddIcon />}
+        sx={{ mb: 2 }}
+        onClick={handleCreateClick}
+      >
+        Create User
+      </Button>
 
       {users.length === 0 ? (
         <Typography>No users found.</Typography>
@@ -151,6 +179,13 @@ export default function Users() {
         </TableContainer>
       )}
 
+      {/* Create User Dialog */}
+      <CreateUser
+        open={createDialogOpen}
+        onClose={handleCreateClose}
+        onCreate={handleCreateSave}
+      />
+
       {/* Edit User Dialog */}
       <EditUser
         open={editDialogOpen}
@@ -180,6 +215,7 @@ export default function Users() {
         </DialogActions>
       </Dialog>
 
+      {/* Snackbar Notifications */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}
