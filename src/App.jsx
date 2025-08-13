@@ -1,4 +1,3 @@
-// src/App.jsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
@@ -6,9 +5,11 @@ import Users from './pages/Users';
 import Exercises from './pages/Exercises';
 import HomeScreenConfig from './pages/HomeScreenConfig';
 import SignIn from './pages/SignIn';
+import { useSelector } from 'react-redux';
 
 function App() {
-  const isAuthenticated = !!localStorage.getItem('token'); // simplify auth check
+  const token = useSelector((state) => state.auth.token);
+  const isAuthenticated = !!token;
 
   return (
     <Router>

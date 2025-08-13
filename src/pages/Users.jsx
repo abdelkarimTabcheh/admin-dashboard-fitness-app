@@ -1,4 +1,3 @@
-// src/pages/Users.jsx
 import React, { useEffect, useState } from 'react';
 import {
   Box,
@@ -16,8 +15,12 @@ import {
   CircularProgress,
   Typography,
   Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions
 } from '@mui/material';
-import { Dialog, DialogTitle, DialogContent, DialogContentText, DialogActions } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
@@ -29,27 +32,24 @@ import CreateUser from '../components/CreateUser';
 export default function Users() {
   const dispatch = useDispatch();
   const { list: users, status, error } = useSelector((state) => state.users);
+  const token = useSelector((state) => state.auth.token); // <- get token from Redux
 
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [userToEdit, setUserToEdit] = useState(null);
-
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
-
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'info' });
 
   useEffect(() => {
-    if (status === 'idle') {
+    if (status === 'idle' && token) { // <- wait for token before fetching
       dispatch(fetchUsers());
     }
-  }, [dispatch, status]);
+  }, [dispatch, status, token]);
 
   // --- CREATE ---
   const handleCreateClick = () => setCreateDialogOpen(true);
   const handleCreateClose = () => setCreateDialogOpen(false);
-
   const handleCreateSave = (newUserData) => {
     dispatch(addUser(newUserData))
       .unwrap()
@@ -104,7 +104,6 @@ export default function Users() {
     setDeleteConfirmOpen(false);
     setUserToDelete(null);
   };
-
   const handleSnackbarClose = () => setSnackbar((prev) => ({ ...prev, open: false }));
 
   if (status === 'loading') {
@@ -128,7 +127,6 @@ export default function Users() {
     <Box p={3}>
       <Typography variant="h4" mb={3}>Users</Typography>
 
-      {/* Create Button */}
       <Button
         variant="contained"
         color="primary"
@@ -179,22 +177,9 @@ export default function Users() {
         </TableContainer>
       )}
 
-      {/* Create User Dialog */}
-      <CreateUser
-        open={createDialogOpen}
-        onClose={handleCreateClose}
-        onCreate={handleCreateSave}
-      />
+      <CreateUser open={createDialogOpen} onClose={handleCreateClose} onCreate={handleCreateSave} />
+      <EditUser open={editDialogOpen} onClose={handleEditClose} user={userToEdit} onSave={handleEditSave} />
 
-      {/* Edit User Dialog */}
-      <EditUser
-        open={editDialogOpen}
-        onClose={handleEditClose}
-        user={userToEdit}
-        onSave={handleEditSave}
-      />
-
-      {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteConfirmOpen}
         onClose={handleDeleteCancel}
@@ -215,7 +200,6 @@ export default function Users() {
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar Notifications */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={4000}

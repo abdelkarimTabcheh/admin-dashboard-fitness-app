@@ -12,20 +12,32 @@ import {
   ListItemIcon,
   ListItemText,
   ListItemButton,
-  IconButton
+  IconButton,
+  Button
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import PeopleIcon from '@mui/icons-material/People';
 import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
 import HomeIcon from '@mui/icons-material/Home';
+import LogoutIcon from '@mui/icons-material/Logout';
+import { useDispatch } from 'react-redux';
+import { logout } from '../redux/authSlice';
+import { useNavigate } from 'react-router-dom';
 
 const drawerWidth = 240;
 
 export default function Layout({ children }) {
   const [mobileOpen, setMobileOpen] = React.useState(false);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
+  };
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate('/login');
   };
 
   const drawer = (
@@ -33,21 +45,21 @@ export default function Layout({ children }) {
       <Toolbar />
       <List>
         <ListItem key="Users" disablePadding>
-          <ListItemButton>
+          <ListItemButton onClick={() => navigate('/users')}>
             <ListItemIcon><PeopleIcon /></ListItemIcon>
             <ListItemText primary="Users" />
           </ListItemButton>
         </ListItem>
 
         <ListItem key="Exercises" disablePadding>
-          <ListItemButton>
+          <ListItemButton onClick={() => navigate('/exercises')}>
             <ListItemIcon><FitnessCenterIcon /></ListItemIcon>
             <ListItemText primary="Exercises" />
           </ListItemButton>
         </ListItem>
 
         <ListItem key="Home Config" disablePadding>
-          <ListItemButton>
+          <ListItemButton onClick={() => navigate('/home-config')}>
             <ListItemIcon><HomeIcon /></ListItemIcon>
             <ListItemText primary="Home Config" />
           </ListItemButton>
@@ -60,18 +72,28 @@ export default function Layout({ children }) {
     <Box sx={{ display: 'flex' }}>
       <CssBaseline />
       <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-        <Toolbar>
-          <IconButton
+        <Toolbar sx={{ display: 'flex', justifyContent: 'space-between' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <IconButton
+              color="inherit"
+              edge="start"
+              onClick={handleDrawerToggle}
+              sx={{ mr: 2, display: { sm: 'none' } }}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Typography variant="h6" noWrap component="div">
+              Admin Dashboard
+            </Typography>
+          </Box>
+
+          <Button
             color="inherit"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: 'none' } }}
+            startIcon={<LogoutIcon />}
+            onClick={handleLogout}
           >
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" noWrap component="div">
-            Admin Dashboard
-          </Typography>
+            Logout
+          </Button>
         </Toolbar>
       </AppBar>
 
