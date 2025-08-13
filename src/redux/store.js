@@ -4,6 +4,7 @@ import userReducer from './userSlice';
 import authReducer from './authSlice';
 import exerciseReducer from './exerciseSlice';
 import homeConfigReducer from './homeConfigSlice';
+import workoutReducer from './workoutSlice'; // Add this
 
 export const store = configureStore({
   reducer: {
@@ -11,5 +12,6 @@ export const store = configureStore({
     auth: authReducer,
     exercises: exerciseReducer,
     homeConfig: homeConfigReducer,
+    workouts: workoutReducer, // Add this
   },
 });

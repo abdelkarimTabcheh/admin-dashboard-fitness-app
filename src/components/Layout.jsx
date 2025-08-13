@@ -18,6 +18,7 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import PeopleIcon from '@mui/icons-material/People';
 import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
+import SportsGymnasticsIcon from '@mui/icons-material/SportsGymnastics';
 import HomeIcon from '@mui/icons-material/Home';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useDispatch } from 'react-redux';
@@ -48,6 +49,13 @@ export default function Layout({ children }) {
           <ListItemButton onClick={() => navigate('/users')}>
             <ListItemIcon><PeopleIcon /></ListItemIcon>
             <ListItemText primary="Users" />
+          </ListItemButton>
+        </ListItem>
+
+        <ListItem key="Workouts" disablePadding>
+          <ListItemButton onClick={() => navigate('/workouts')}>
+            <ListItemIcon><SportsGymnasticsIcon /></ListItemIcon>
+            <ListItemText primary="Workouts" />
           </ListItemButton>
         </ListItem>
 
