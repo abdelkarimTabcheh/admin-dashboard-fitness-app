@@ -22,16 +22,19 @@ export default function EditUser({ open, onClose, user, onSave }) {
     isAdmin: false,
   });
 
+  const [originalData, setOriginalData] = useState({});
   const [error, setError] = useState(null);
 
   useEffect(() => {
     if (user) {
-      setFormData({
+      const userData = {
         email: user.email || '',
         name: user.name || '',
         role: user.role || '',
         isAdmin: user.isAdmin || false,
-      });
+      };
+      setFormData(userData);
+      setOriginalData(userData); // Store original data for comparison
     }
   }, [user]);
 
@@ -43,11 +46,27 @@ export default function EditUser({ open, onClose, user, onSave }) {
     }));
   };
 
+  // Check if any changes were made
+  const hasChanges = () => {
+    return (
+      formData.name !== originalData.name ||
+      formData.role !== originalData.role ||
+      formData.isAdmin !== originalData.isAdmin
+    );
+  };
+
   const handleSubmit = () => {
     if (!formData.email) {
       setError('Email is required');
       return;
     }
+
+    // Check if no changes were made
+    if (!hasChanges()) {
+      setError('No changes detected. Please modify at least one field.');
+      return;
+    }
+
     setError(null);
     onSave(formData);
   };
@@ -58,7 +77,7 @@ export default function EditUser({ open, onClose, user, onSave }) {
       <DialogContent>
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-        <Box component="form" noValidate autoComplete="off" sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <Box component="form" noValidate autoComplete="off" sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
           <TextField
             label="Email"
             name="email"
@@ -67,7 +86,17 @@ export default function EditUser({ open, onClose, user, onSave }) {
             fullWidth
             required
             disabled
-            InputLabelProps={{ shrink: true }} // <- keeps label visible even if disabled
+            variant="outlined"
+            sx={{
+              '& .MuiInputLabel-root': {
+                transform: 'translate(14px, -9px) scale(0.75)', // Keep label positioned correctly
+                backgroundColor: 'white',
+                padding: '0 4px',
+              },
+              '& .MuiInputLabel-root.Mui-disabled': {
+                color: 'rgba(0, 0, 0, 0.6)', // Better disabled color
+              }
+            }}
           />
           <TextField
             label="Name"
